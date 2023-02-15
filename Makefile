@@ -3,12 +3,16 @@
 all: build
 
 
-build: gopp.go config.go
+build:
 	go mod tidy
-	go build -ldflags='-s -w' $+
+	go build -ldflags='-s -w' -o gopp
 
 create-man:
 	help2man --no-discard-stderr --name='Postfix policy provider' -v-v -s8 -N -ogopp.8 ./gopp
+
+upx:
+	upx -qq gopp
+
 
 install: build create-man
 	sudo install -s -m 0555 -o root -g bin -T gopp /usr/local/sbin/gopp
