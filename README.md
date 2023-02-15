@@ -4,7 +4,7 @@
 
 Build and install is a simple process:
 ```bash
-go get github.com/bradfitz/gomemcache/memcache
+make build
 sudo make install
 ```
 to build gopp and install it into /usr/local/sbin directory
