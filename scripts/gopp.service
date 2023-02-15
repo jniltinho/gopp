@@ -6,7 +6,7 @@ After=network.target auditd.service
 User=postfix
 Group=postfix
 WorkingDirectory=/var/lib/postfix
-ExecStart=/usr/local/sbin/gopp
+ExecStart=/usr/local/sbin/gopp -c /etc/postfix/gopp.cfg
 KillMode=process
 Restart=on-failure
 
