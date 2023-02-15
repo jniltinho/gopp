@@ -110,7 +110,7 @@ func check_grey_internal(key uint64) string {
 			action = DEFAULT_ACTION
 		}
 		if LOG_DEBUG {
-			_log_debug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v",
+			logDebug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v",
 				now, try_time, GREYLIST_DELAY, delta))
 		}
 	}
@@ -133,7 +133,7 @@ func check_grey_memcached(key string) string {
 	var delta int64
 
 	it := mc_get(key)
-	_log_debug(fmt.Sprintf("Got from memcache: %v", it))
+	logDebug(fmt.Sprintf("Got from memcache: %v", it))
 
 	if it == nil {
 		if !mc_set(key, strconv.FormatInt(now, 10), GREYLIST_EXPIRE) {
@@ -142,8 +142,7 @@ func check_grey_memcached(key string) string {
 		}
 		delta = GREYLIST_DELAY
 	} else {
-		_log_debug(fmt.Sprintf("Got memcache item: Key:%v, Value:%v (%v)",
-			it.Key, it.Value, string(it.Value)))
+		logDebug(fmt.Sprintf("Got memcache item: Key:%v, Value:%v (%v)", it.Key, it.Value, string(it.Value)))
 		try_time, err := strconv.ParseInt(string(it.Value), 10, 0)
 
 		if err != nil {
@@ -155,8 +154,7 @@ func check_grey_memcached(key string) string {
 		if delta <= 0 {
 			action = DEFAULT_ACTION
 		}
-		_log_debug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v",
-			now, try_time, GREYLIST_DELAY, delta))
+		logDebug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v", now, try_time, GREYLIST_DELAY, delta))
 	}
 
 	if action != DEFAULT_ACTION {
@@ -166,7 +164,7 @@ func check_grey_memcached(key string) string {
 }
 
 func check_RCPT(rMap map[string]string) string {
-	_log_debug("Check on RCPT state")
+	logDebug("Check on RCPT state")
 
 	if GREYLIST {
 		res := check_grey(rMap)
@@ -188,7 +186,7 @@ func clean_grey_map() {
 		_mutex.Lock()
 		_go_routines_run["clean_grey_map"] = 1
 		_mutex.Unlock()
-		_log_debug("Starting _grey_map cleaner")
+		logDebug("Starting _grey_map cleaner")
 	}
 
 	for {
@@ -224,7 +222,7 @@ func clean_grey_map() {
 }
 
 // Get command line parameters
-func command_line_get() {
+func cmdLineGet() {
 	flag.StringVar(&_cfg_file_name, "c", DEFAULT_CFG_FNAME, "Set configuration file name.")
 	flagShortVersion := flag.Bool("v", false, "Show version information and exit.")
 	flagVersion := flag.Bool("V", false, "Show version information of the programm and Go runtime, then exit.")
@@ -245,7 +243,7 @@ func command_line_get() {
 	}
 }
 
-func handle_requests(conn net.Conn) {
+func handleRequests(conn net.Conn) {
 	var start_time time.Time
 	reqStr := ""     // Postfix request as a string
 	EOF := false     // true indicates closed connection
@@ -271,9 +269,8 @@ func handle_requests(conn net.Conn) {
 			if str.HasSuffix(reqStr, "\n\n") {
 				request_cnt++
 				if LOG_DEBUG {
-					_log_debug(fmt.Sprintf("Policy request from %v %v (%v bytes)",
-						conn.RemoteAddr(), request_cnt, len(reqStr)))
-					_log_debug(reqStr)
+					logDebug(fmt.Sprintf("Policy request from %v %v (%v bytes)", conn.RemoteAddr(), request_cnt, len(reqStr)))
+					logDebug(reqStr)
 				}
 				if STAT_INTERVAL > 0 {
 					start_time = time.Now()
@@ -303,14 +300,14 @@ func mc_get(key string) *memcache.Item {
 	it, err := _mc.Get(key)
 	_memcache_mutex.Unlock()
 	if err != nil && err != memcache.ErrCacheMiss {
-		_log_debug(err)
+		logDebug(err)
 	}
 	return it
 }
 
 func mc_set(key string, val string, exp int64) bool {
 	it := memcache.Item{Key: key, Value: []byte(val), Expiration: int32(exp)}
-	_log_debug("mc_set(): new memcache item:", it)
+	logDebug("mc_set(): new memcache item:", it)
 
 	_memcache_mutex.Lock()
 	err := _mc.Set(&it)
@@ -388,11 +385,11 @@ func _check(e *error) {
 func _log(v ...interface{}) {
 	log.Print(v...)
 	if LOG_DEBUG {
-		_log_debug(v...)
+		logDebug(v...)
 	}
 }
 
-func _log_debug(v ...interface{}) {
+func logDebug(v ...interface{}) {
 	if LOG_DEBUG {
 		fmt.Printf("%v %v %v[%v]: ", _now(), _hostname, PROG_NAME, _PID)
 		fmt.Println(v...)
@@ -403,18 +400,18 @@ func _now() string {
 	return time.Now().Format(time.StampMilli)
 }
 
-func _stat() {
+func StatsCollector() {
 	_mutex.Lock()
-	_, found := _go_routines_run["_stat"]
+	_, found := _go_routines_run["StatsCollector"]
 	_mutex.Unlock()
 	if found || STAT_INTERVAL <= 0 { // already run or need no statistics
 		return
 	} else { // registration
 		_mutex.Lock()
-		_go_routines_run["_stat"] = 1
+		_go_routines_run["StatsCollector"] = 1
 		_mutex.Unlock()
 	}
-	_log_debug("Stats collector run")
+	logDebug("Stats Collector Run")
 
 	var (
 		stat_timer                              *time.Timer = time.NewTimer(STAT_INTERVAL)

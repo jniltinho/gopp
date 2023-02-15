@@ -52,10 +52,10 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 			LOG_DEBUG = false
 			_cfg["debug"] = d
 		default:
-			_log_debug(fmt.Sprintf("Unknown setting %v for parameter debug", d))
+			logDebug(fmt.Sprintf("Unknown setting %v for parameter debug", d))
 		}
 	}
-	_log_debug("Set configuration parameters")
+	logDebug("Set configuration parameters")
 
 	// Set regular log
 	logfile_name, found := new_cfg["log"]
@@ -76,7 +76,7 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 
 	for par, val := range new_cfg {
 		if _cfg[par] != val {
-			_log_debug("New configuration value:", par, val)
+			logDebug("New configuration value:", par, val)
 		}
 
 		switch par {
@@ -113,7 +113,7 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 			case "internal", "memcached":
 				_cfg[par] = val
 			default:
-				_log_debug(fmt.Sprintf("Unknown setting %v for parameter grey_list_store", val))
+				logDebug(fmt.Sprintf("Unknown setting %v for parameter grey_list_store", val))
 			}
 		case "listen_ip":
 			_cfg[par] = val
@@ -131,7 +131,7 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 			} else {
 				_cfg[par] = val
 				STAT_INTERVAL = time.Duration(time.Duration(seconds) * time.Second)
-				_log_debug("STAT_INTERVAL set to", seconds)
+				logDebug("STAT_INTERVAL set to", seconds)
 			}
 		case "user":
 			/* 	This option does not work in Linux since Go v.1,4.
@@ -148,12 +148,12 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 						if err == nil {
 							uid, err = strconv.Atoi(usr.Uid)
 						} else {
-							_log_debug("Cannot find UID for", val, ":", err)
+							logDebug("Cannot find UID for", val, ":", err)
 						}
 					}
 					err = syscall.Setuid(uid)
 					_check(&err)
-					_log_debug("UID set to", uid)
+					logDebug("UID set to", uid)
 				}
 			}
 			_cfg[par] = val
@@ -172,7 +172,7 @@ func apply_cfg(initial bool, new_cfg map[string]string) {
 		}
 	}
 
-	go _stat()
+	go StatsCollector()
 }
 
 func get_local_ips() (addresses map[string]bool) {
@@ -201,7 +201,7 @@ func get_local_ips() (addresses map[string]bool) {
 		for k, _ := range addresses {
 			addrsStr += " " + k
 		}
-		_log_debug(fmt.Sprintf("local IP addresses on the host excluded from greylist check:%v", addrsStr))
+		logDebug(fmt.Sprintf("local IP addresses on the host excluded from greylist check:%v", addrsStr))
 	}
 	return
 }
@@ -223,13 +223,13 @@ func parse_cfg_line(line string) (string, string) {
 	par := str.ToLower(str.TrimSpace(pv[0]))
 	val := str.TrimSpace(str.Trim(pv[1], "'\","))
 	if len(par) == 0 || len(val) == 0 {
-		_log_debug("Error in configuration line: %v", line)
+		logDebug("Error in configuration line: %v", line)
 		return "", ""
 	}
 	return par, val
 }
 
-func read_config() {
+func readConfig() {
 	var new_cfg = make(map[string]string)
 
 	// Read configuraton file
@@ -246,16 +246,15 @@ func read_config() {
 		}
 
 		_, parOK := _cfg[par]
-		if parOK == true { // check if parameter is alowed
-			//_log_debug(fmt.Sprintf("Got cfg param %v:%v", par, val))
+		if parOK == true {
+			// check if parameter is alowed
+			//logDebug(fmt.Sprintf("Got cfg param %v:%v", par, val))
 			new_cfg[par] = val
 		} else {
-			_log_debug(fmt.Sprintf("Unknown configuration parameter `%v' on line %v",
-				par, ln+1))
+			logDebug(fmt.Sprintf("Unknown configuration parameter `%v' on line %v", par, ln+1))
 		}
 	}
 
 	apply_cfg(true, new_cfg)
-	_log(fmt.Sprintf("%v %v started, configuration read from %v",
-		PROG_NAME, VERSION, _cfg_file_name))
+	_log(fmt.Sprintf("%v %v started, configuration read from %v", PROG_NAME, VERSION, _cfg_file_name))
 }
