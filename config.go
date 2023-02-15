@@ -9,16 +9,16 @@ package main
 import (
 	"fmt"
 	"hash/crc64"
-	"io/ioutil"
 	"log"
 	"log/syslog"
 	"net"
 	"os"
 	"os/user"
 	"strconv"
-	str "strings"
 	"syscall"
 	"time"
+
+	"gopkg.in/ini.v1"
 )
 
 // Global vars
@@ -206,52 +206,25 @@ func get_local_ips() (addresses map[string]bool) {
 	return
 }
 
-func parse_cfg_line(line string) (string, string) {
-	l := str.TrimSpace(line)
-
-	// strip comments
-	sharpidx := str.Index(l, "#")
-	if sharpidx != -1 {
-		l = l[:sharpidx]
-	}
-	if len(l) == 0 {
-		return "", ""
-	}
-
-	// split by '=' and turn parameter mname to lower case
-	pv := str.SplitN(l, "=", 2)
-	par := str.ToLower(str.TrimSpace(pv[0]))
-	val := str.TrimSpace(str.Trim(pv[1], "'\","))
-	if len(par) == 0 || len(val) == 0 {
-		logDebug("Error in configuration line: %v", line)
-		return "", ""
-	}
-	return par, val
-}
-
 func readConfig() {
 	var new_cfg = make(map[string]string)
 
-	// Read configuraton file
-	cfg, err := ioutil.ReadFile(_cfg_file_name)
+	cfg, err := ini.Load(_cfg_file_name)
 	if err != nil {
 		_log("Cannot read configuration file:", err)
 		os.Exit(1)
 	}
 
-	for ln, line := range str.Split(string(cfg), "\n") {
-		par, val := parse_cfg_line(line)
-		if len(par) == 0 {
-			continue
-		}
+	keys := cfg.Section("").KeyStrings()
 
-		_, parOK := _cfg[par]
-		if parOK == true {
-			// check if parameter is alowed
-			//logDebug(fmt.Sprintf("Got cfg param %v:%v", par, val))
+	for _, par := range keys {
+		val := cfg.Section("").Key(par).String()
+
+		//check if parameter is alowed
+		//logDebug(fmt.Sprintf("Got cfg param %v:%v", par, val))
+
+		if len(par) > 0 && len(val) > 0 {
 			new_cfg[par] = val
-		} else {
-			logDebug(fmt.Sprintf("Unknown configuration parameter `%v' on line %v", par, ln+1))
 		}
 	}
 
