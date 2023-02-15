@@ -57,8 +57,7 @@ func check_grey_internal(key uint64) string {
 			action = DEFAULT_ACTION
 		}
 		if LOG_DEBUG {
-			logDebug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v",
-				now, try_time, GREYLIST_DELAY, delta))
+			logDebug(fmt.Sprintf("now:%v, try_time:%v, GREYLIST_DELAY:%v, delta:%v", now, try_time, GREYLIST_DELAY, delta))
 		}
 	}
 	if !found {
