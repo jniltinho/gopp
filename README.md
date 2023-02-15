@@ -4,7 +4,7 @@
 
 Build and install is a simple process:
 ```bash
-make build
+make
 sudo make install
 ```
 to build gopp and install it into /usr/local/sbin directory
