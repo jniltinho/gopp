@@ -28,9 +28,7 @@ func check_grey(reqMap map[string]string) string {
 		if len(reqMap["queue_id"]) > 0 {
 			qid = reqMap["queue_id"] + ": "
 		}
-		_log(fmt.Sprintf(
-			"%vgrey list check: client %v, sender %v, recipient %v, checksum %x",
-			qid, client_address, sender, recipient, msg_key))
+		_log(fmt.Sprintf("%v grey list check: client %v, sender %v, recipient %v, checksum %x", qid, client_address, sender, recipient, msg_key))
 	}
 
 	switch _cfg["grey_list_store"] {
