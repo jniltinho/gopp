@@ -9,20 +9,18 @@ sudo make install
 ```
 to build gopp and install it into /usr/local/sbin directory
 
-If your use Debian/Ubibtu you also need to copy defaults to /etc:
+If your use Debian/Ubuntu you also need to copy defaults to /etc:
 ```bash
 cp scripts/gopp-etc_default /etc/defaults/gopp
 ```
 and then
 ```bash
-cp scripts/gopp.conf.upstart /etc/init
+sudo cp scripts/gopp.service /etc/systemd/system/gopp.service
+sudo chmod 664 /etc/systemd/system/gopp.service
+sudo systemctl daemon-reload
+sudo systemctl enable gopp
+sudo systemctl start gopp
 ```
-if you prefer Upstart or
-```bash
-cp scripts/init_d.ubuntu /etc/init.d/gopp
-update-rc.d gopp defaults
-```
-in case of System V startup scripts are preferred.
 
 ## Postfix configuration
 Edit /etc/postfix/main.cf and append `check_policy_service` to the `smtpd_recipient_restrictions` checklist. Please note `check_policy_service` should be one of the late element of the `smtpd_recipient_restrictions` list, for example:
